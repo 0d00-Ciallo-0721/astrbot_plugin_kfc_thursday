@@ -1,0 +1,88 @@
+{
+  "enabled_groups": {
+    "description": "启用KFC星期四活动的群组列表",
+    "type": "list",
+    "hint": "填写群号，一行一个",
+    "default": []
+  },
+  "morning_enabled": {
+    "description": "是否启用早上10:00的发送",
+    "type": "bool",
+    "hint": "设置为true启用，false禁用",
+    "default": true
+  },
+  "morning_prompt": {
+    "description": "早上10:00发送的KFC文案提示词",
+    "type": "string",
+    "hint": "用于生成早上的KFC文案",
+    "default": "请你以撒娇的语气，写一段请求对方转账50元的消息。你非常想吃KFC，而今天是疯狂星期四，特地想用可爱的方式让对方给你转账。"
+  },
+  "noon_enabled": {
+    "description": "是否启用中午12:00的发送",
+    "type": "bool",
+    "hint": "设置为true启用，false禁用",
+    "default": true
+  },
+  "noon_prompt": {
+    "description": "中午12:00发送的KFC文案提示词",
+    "type": "string",
+    "hint": "用于生成中午的KFC文案",
+    "default": "请你以可怜的语气，写一段请求对方转账50元的消息。你特别想吃KFC，但钱包空空，今天又是疯狂星期四，希望通过可怜的方式让对方转账。"
+  },
+  "evening_enabled": {
+    "description": "是否启用晚上18:00的发送",
+    "type": "bool",
+    "hint": "设置为true启用，false禁用",
+    "default": true
+  },
+  "evening_prompt": {
+    "description": "晚上18:00发送的KFC文案提示词",
+    "type": "string",
+    "hint": "用于生成晚上的KFC文案",
+    "default": "请你以搞笑的语气，写一段请求对方转账50元的消息。你特别想吃KFC，而今天是疯狂星期四，用幽默风趣的方式让对方给你转账。"
+  },
+  "night_enabled": {
+    "description": "是否启用晚上20:00的发送",
+    "type": "bool",
+    "hint": "设置为true启用，false禁用",
+    "default": true
+  },
+  "night_prompt": {
+    "description": "晚上20:00发送的KFC文案提示词",
+    "type": "string",
+    "hint": "用于生成夜晚的KFC文案",
+    "default": "请你以卖萌的语气，写一段请求对方转账50元的消息。你超级想吃KFC，今天是疯狂星期四，用萌萌的语气请求对方转账。"
+  },
+  "custom_times": {
+    "description": "自定义发送时间和提示词",
+    "type": "object",
+    "hint": "自定义KFC文案发送的时间和提示词",
+    "items": {
+      "enabled": {
+        "description": "是否启用自定义时间发送",
+        "type": "bool",
+        "default": true
+      },
+      "weekday": {
+        "description": "星期几 (1-7，1代表周一)",
+        "type": "int",
+        "default": 4
+      },
+      "hour": {
+        "description": "发送时间(小时，0-23)",
+        "type": "int",
+        "default": 18
+      },
+      "minute": {
+        "description": "发送时间(分钟，0-59)",
+        "type": "int",
+        "default": 30
+      },
+      "prompt": {
+        "description": "自定义提示词",
+        "type": "string",
+        "default": "请以你的风格写一段吸引人的KFC推销文案。"
+      }
+    }
+  }
+}
