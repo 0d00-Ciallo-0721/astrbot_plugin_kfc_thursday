@@ -14,7 +14,7 @@ import time
     "astrbot_plugin_kfc_thursday",
     "和泉智宏",
     "疯狂星期四",
-    "1.0",
+    "1.1",
     "https://github.com/0d00-Ciallo-0721/astrbot_plugin_kfc_thursday",
 )
 class KFCThursdayPlugin(Star):
@@ -205,11 +205,16 @@ class KFCThursdayPlugin(Star):
                         
                         logger.info(f"创建锁文件，开始发送KFC文案")
                         
+                        # 导入消息组件
+                        from astrbot.api.message_components import Plain, Image
+                        
                         # 发送逻辑
                         for group_id in self.enabled_groups:
                             try:
+                                # 获取KFC文案
                                 kfc_text = await self.get_llm_kfc_content(prompt_to_use, group_id)
                                 
+                                # 找到aiocqhttp平台
                                 platform = None
                                 for p in self.context.platform_manager.get_insts():
                                     if p.meta().name == "aiocqhttp":
@@ -217,16 +222,41 @@ class KFCThursdayPlugin(Star):
                                         break
                                 
                                 if platform:
+                                    # 直接通过平台API发送消息
                                     client = platform.get_client()
-                                    # 发送文本
-                                    await client.send_group_msg(group_id=int(group_id), message=kfc_text)
                                     
-                                    # 发送收款码
+                                    # 发送文本消息
+                                    await client.send_group_msg(
+                                        group_id=int(group_id), 
+                                        message=kfc_text
+                                    )
+                                    # 在发送图片前添加日志
+                                    logger.info(f"收款码图片路径: {self.payment_qrcode_path}")
+                                    logger.info(f"收款码图片是否存在: {os.path.exists(self.payment_qrcode_path)}")
+
+                                    # 发送图片
                                     if os.path.exists(self.payment_qrcode_path):
-                                        await client.send_group_msg(
-                                            group_id=int(group_id),
-                                            message=f"[CQ:image,file=file:///{self.payment_qrcode_path}]"
-                                        )
+                                        try:
+                                            # 方法1: 使用CQ码的file协议，需要绝对路径
+                                            absolute_path = os.path.abspath(self.payment_qrcode_path)
+                                            await client.send_group_msg(
+                                                group_id=int(group_id),
+                                                message=f"[CQ:image,file=file:///{absolute_path}]"
+                                            )
+                                        except Exception as e1:
+                                            logger.error(f"方法1发送图片失败: {e1}")
+                                            try:
+                                                # 方法2: 使用base64编码发送
+                                                with open(self.payment_qrcode_path, 'rb') as f:
+                                                    import base64
+                                                    img_base64 = base64.b64encode(f.read()).decode()
+                                                    await client.send_group_msg(
+                                                        group_id=int(group_id),
+                                                        message=f"[CQ:image,file=base64://{img_base64}]"
+                                                    )
+                                            except Exception as e2:
+                                                logger.error(f"方法2发送图片失败: {e2}")
+
                                     
                                     logger.info(f"成功发送KFC文案到群 {group_id}")
                                 else:
@@ -265,12 +295,8 @@ class KFCThursdayPlugin(Star):
                         for t in processed_times:
                             f.write(f"{t}\n")
                 
-                # 晚上结束任务
-                if now.hour >= 23:
-                    logger.info("今天的任务结束，明天继续检查")
-                    tomorrow = now.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1)
-                    await asyncio.sleep((tomorrow - now).total_seconds())
-                    return
+                # 继续等待检查
+                await asyncio.sleep(10)
                     
             except Exception as e:
                 logger.error(f"定时任务出错: {e}")
