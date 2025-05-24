@@ -14,7 +14,7 @@ import time
     "astrbot_plugin_kfc_thursday",
     "和泉智宏",
     "疯狂星期四",
-    "1.1",
+    "1.2",
     "https://github.com/0d00-Ciallo-0721/astrbot_plugin_kfc_thursday",
 )
 class KFCThursdayPlugin(Star):
@@ -324,16 +324,48 @@ class KFCThursdayPlugin(Star):
                 
             # 获取会话
             conversation = await self.context.conversation_manager.get_conversation(unified_msg_origin, curr_cid)
-            contexts = json.loads(conversation.history) if conversation.history else []
+            contexts = json.loads(conversation.history) if hasattr(conversation, 'history') and conversation.history else []
             
             # 获取当前提供商
             provider = self.context.get_using_provider()
             if not provider:
                 return "KFC疯狂星期四，炸鸡疯狂8.8折，快来KFC享用美味吧！"
+            
+            # 动态获取人格提示词
+            personality_prompt = ""
+            
+            # 从会话中获取人格ID
+            if conversation and hasattr(conversation, 'persona_id'):
+                persona_id = conversation.persona_id
                 
-            # 获取当前人格设置
-            personality = provider.curr_personality
-            personality_prompt = personality["prompt"] if personality and "prompt" in personality else ""
+                # 获取所有已加载的人格
+                all_personas = self.context.provider_manager.personas
+                
+                # 如果用户明确取消了人格
+                if persona_id == "[%None]":
+                    personality_prompt = ""  # 用户明确取消了人格，使用空提示
+                # 如果用户设置了特定人格
+                elif persona_id:
+                    # 在所有人格中查找匹配的人格
+                    for persona in all_personas:
+                        if persona.get("name") == persona_id:
+                            personality_prompt = persona.get("prompt", "")
+                            break
+                # 如果没有设置人格（新会话），使用默认人格
+                else:
+                    # 获取默认人格名称
+                    default_persona = self.context.provider_manager.selected_default_persona
+                    if default_persona:
+                        default_persona_name = default_persona.get("name")
+                        # 在所有人格中查找默认人格
+                        for persona in all_personas:
+                            if persona.get("name") == default_persona_name:
+                                personality_prompt = persona.get("prompt", "")
+                                break
+            
+            # 如果上面的逻辑没有找到人格提示词，使用提供商的当前人格作为备选
+            if not personality_prompt and hasattr(provider, 'curr_personality') and provider.curr_personality:
+                personality_prompt = provider.curr_personality.get("prompt", "")
             
             # 调用LLM
             llm_response = await provider.text_chat(
@@ -347,6 +379,7 @@ class KFCThursdayPlugin(Star):
         except Exception as e:
             logger.error(f"LLM调用失败: {e}")
             return "KFC疯狂星期四，V我50，请速速行动！🍗"
+
     
     @filter.command("kfc")
     async def kfc_command(self, event: AstrMessageEvent):
